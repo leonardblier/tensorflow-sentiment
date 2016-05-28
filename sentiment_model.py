@@ -110,6 +110,7 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
     epoch_size = len(data[0])//m.batch_size
     start_time = time.time()
     costs = 0.0
+    correct_answers = 0
 
     seqs, labels = data
     MAXLEN = 100
@@ -121,14 +122,16 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
         cost, prediction, _ = session.run([m.cost, m.prediction, eval_op],
                                      {m.input_data: x,
                                       m.targets: y})
+        correct_answers += (np.argmax(prediction) == np.array(y)).sum()
         costs += cost
 
         if verbose and step % (epoch_size // 10) == 10:
             print("Sentence : "+imdb_data.seq2str(x[0],id2word))
             print("True label : "+str(y[0]))
             print("Predicted label : "+str(np.argmax(prediction[0])))
-            print("%.3f loss: %.3f speed: %.0f wps" %
-                  (step * 1.0 / epoch_size, np.exp(costs / step),
+            print("%.3f loss: %.3f accuracy: %.3f speed: %.0f wps" %
+                  (step * 1.0 / epoch_size, costs / step,
+                   correct_answers / (step*m.batch_size),
                    step * m.batch_size / (time.time() - start_time)))
 
     return np.exp(costs / epoch_size)
