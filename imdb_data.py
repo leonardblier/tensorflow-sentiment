@@ -180,7 +180,10 @@ def load_data(path="imdb.pkl", n_words=100000, valid_portion=0.1, maxlen=None,
 def load_dict_imdb():
     path = "imdb.dict.pkl"
     with open(path, "rb") as f:
-        word2id = pickle.load(f)
+        if six.PY2:
+            word2id = pickle.load(f)
+        else:
+            word2id = pickle.load(f, encoding="utf-8")
     id2word = [None for _ in range(len(word2id)+2)]
     for k,v in iter(word2id.items()):
         id2word[v] = k
