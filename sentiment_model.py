@@ -185,7 +185,7 @@ def main(_):
                                                    test_data,
                                                    tf.no_op(),
                                                    id2word)
-        print("Test Perplexity: %.3f Test Accuracy" % (test_perplexity,test_accuracy))
+        print("Test Perplexity: %.3f Test Accuracy: %.3f" % (test_perplexity,test_accuracy))
 
 
 if __name__ == "__main__":
