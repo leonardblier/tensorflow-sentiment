@@ -10,7 +10,6 @@ import tensorflow as tf
 from tensorflow.models.rnn.ptb import reader
 import imdb_data
 
-import ipdb
 
 flags = tf.flags
 logging = tf.logging
@@ -36,33 +35,12 @@ class SentimentModel(object):
         self._input_data = tf.placeholder(tf.int32, [batch_size, config.max_len])
         self._targets = tf.placeholder(tf.int32, [batch_size])
 
-        with tf.device("/cpu:0"):
-            embedding = tf.get_variable("embedding", [vocab_size, size])
-            inputs = tf.nn.embedding_lookup(embedding, self._input_data)
+        embedding = tf.get_variable("embedding", [vocab_size, size])
+        inputs = tf.nn.embedding_lookup(embedding, self._input_data)
 
-        output = tf.reduce_mean(inputs, 1)
+        output = tf.reduce_sum(inputs, 1)
         softmax_w = tf.get_variable("softmax_w", [size, 1])
         softmax_b = tf.get_variable("softmax_b", [1])
-
-
-        
-        # cell = tf.nn.rnn_cell.BasicRNNCell(size)
-        
-        # self._initial_state = cell.zero_state(batch_size, tf.float32)
-        
-        
-        
-
-        # inputs_list = [tf.squeeze(input_, [1])
-        #           for input_ in tf.split(1, max_len, inputs)]
-        
-        # outputs, state = tf.nn.rnn(cell, inputs_list,
-        #                            initial_state=self._initial_state,
-        #                            sequence_length=self._early_stop)
-
-        # #output = outputs[-1]
-        # output = state
-        # #output = tf.reshape(tf.concat(1, outputs), [-1, size])
         
         prediction = tf.sigmoid(tf.matmul(output, softmax_w) + softmax_b)
         self._prediction = prediction
@@ -96,9 +74,6 @@ class SentimentModel(object):
     def prediction(self):
         return self._prediction
     
-    # @property
-    # def initial_state(self):
-    #     return self._initial_state
     
     @property
     def cost(self):
@@ -126,7 +101,7 @@ class Config(object):
     max_epoch = 4
     max_max_epoch = 13
     keep_prob = 1.0
-    lr_decay = 0.
+    lr_decay = 0.1
     batch_size = 1
     vocab_size = 100000
     max_len = 100
@@ -139,7 +114,6 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
     epoch_size = len(data[0])//m.batch_size
     start_time = time.time()
     costs = 0.0
-    #state = m.initial_state.eval()
 
     seqs, labels = data
     MAXLEN = 100
@@ -152,7 +126,6 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
         cost, prediction, _ = session.run([m.cost, m.prediction, eval_op],
                                      {m.input_data: x,
                                       m.targets: y,
-                                      #m.initial_state: state,
                                       m.early_stop:early_stop})
         costs += cost
 
@@ -178,7 +151,6 @@ def main(_):
 
     
     train_data = (10000*[train_data[0][0]], 10000*[train_data[1][0]])
-    ipdb.set_trace()
     
 
     config = Config()
