@@ -37,13 +37,14 @@ class SentimentModel(object):
         inputs = tf.nn.embedding_lookup(embedding, self._input_data)
 
         output = tf.reduce_sum(inputs, 1)
-        softmax_w = tf.get_variable("softmax_w", [size, 1])
-        softmax_b = tf.get_variable("softmax_b", [1])
+        softmax_w = tf.get_variable("softmax_w", [size, 2])
+        softmax_b = tf.get_variable("softmax_b", [2])
         
-        prediction = tf.sigmoid(tf.matmul(output, softmax_w) + softmax_b)
+        logits = tf.matmul(output, softmax_w) + softmax_b
+        prediction = tf.nn.softmax(logits)
         self._prediction = prediction
 
-        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(prediction,self._targets)
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits, self._targets)
         
         self._cost = cost = tf.reduce_sum(loss) / batch_size
 
@@ -125,7 +126,7 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
         if verbose and step % (epoch_size // 10) == 10:
             print("Sentence : "+imdb_data.seq2str(x[0],id2word))
             print("True label : "+str(y[0]))
-            print("Predicted label : "+str(prediction[0,0]))
+            print("Predicted label : "+str(np.argmax(prediction[0])))
             print("%.3f loss: %.3f speed: %.0f wps" %
                   (step * 1.0 / epoch_size, np.exp(costs / step),
                    step * m.batch_size / (time.time() - start_time)))
@@ -141,9 +142,6 @@ def main(_):
 
     train_data, valid_data, test_data = imdb_data.load_data()
     word2id, id2word = imdb_data.load_dict_imdb()
-
-    
-    train_data = (10000*[train_data[0][0]], 10000*[train_data[1][0]])
     
 
     config = Config()
