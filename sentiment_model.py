@@ -30,8 +30,6 @@ class SentimentModel(object):
         self.max_len = max_len = config.max_len
         vocab_size = config.vocab_size
 
-        
-        self._early_stop = tf.placeholder(tf.int32, [batch_size])
         self._input_data = tf.placeholder(tf.int32, [batch_size, config.max_len])
         self._targets = tf.placeholder(tf.int32, [batch_size])
 
@@ -80,7 +78,6 @@ class SentimentModel(object):
         return self._cost
     
     
-
     @property
     def lr(self):
         return self._lr
@@ -89,9 +86,7 @@ class SentimentModel(object):
     def train_op(self):
         return self._train_op
 
-    @property
-    def early_stop(self):
-        return self._early_stop
+
     
 class Config(object):
     init_scale = 0.1
@@ -122,11 +117,9 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
         y = labels[step*m.batch_size:(step+1)*m.batch_size]
         x, max_len_seqs, y = imdb_data.prepare_data(x, y, MAXLEN)
         x = x[:,:MAXLEN]
-        early_stop = (max_len_seqs*np.ones(m.batch_size)).astype("int32") 
         cost, prediction, _ = session.run([m.cost, m.prediction, eval_op],
                                      {m.input_data: x,
-                                      m.targets: y,
-                                      m.early_stop:early_stop})
+                                      m.targets: y})
         costs += cost
 
         if verbose and step % (epoch_size // 10) == 10:
