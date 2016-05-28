@@ -93,7 +93,7 @@ class Config(object):
     init_scale = 0.1
     learning_rate = 1.
     max_grad_norm = 5
-    hidden_size = 2
+    hidden_size = 20
     max_epoch = 4
     max_max_epoch = 13
     keep_prob = 1.0
@@ -110,7 +110,7 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
     epoch_size = len(data[0])//m.batch_size
     start_time = time.time()
     costs = 0.0
-    correct_answers = 0
+    correct_answers = 0.0
 
     seqs, labels = data
     MAXLEN = 100
@@ -134,7 +134,7 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
                    correct_answers / (step*m.batch_size),
                    step * m.batch_size / (time.time() - start_time)))
 
-    return np.exp(costs / epoch_size)
+    return (costs / epoch_size, correct_answers / (epoch_size * m.batch_size))
 
 
 
@@ -168,15 +168,24 @@ def main(_):
             m.assign_lr(session, config.learning_rate * lr_decay)
 
             print("Epoch: %d Learning rate: %.3f" % (i + 1, session.run(m.lr)))
-            train_perplexity = run_epoch(session, m, train_data, m.train_op, id2word,
+            train_perplexity, train_accuracy = run_epoch(session, m, train_data, m.train_op, id2word,
                                        verbose=True)
-            print("Epoch: %d Train Perplexity: %.3f" % (i + 1, train_perplexity))
-            valid_perplexity = run_epoch(session, mvalid, valid_data, tf.no_op(),
-                                         id2word)
-            print("Epoch: %d Valid Perplexity: %.3f" % (i + 1, valid_perplexity))
+            print("Epoch: %d Train Perplexity: %.3f Train Accuracy: %.3f" % \
+                  (i + 1, train_perplexity, train_accuracy))
+            valid_perplexity, valid_accuracy = run_epoch(session,
+                                                         mvalid,
+                                                         valid_data,
+                                                         tf.no_op(),
+                                                         id2word)
+            print("Epoch: %d Valid Perplexity: %.3f Valid Accuracy: %.3f" % \
+                  (i + 1, valid_perplexity, valid_accuracy))
 
-        test_perplexity = run_epoch(session, mtest, test_data, tf.no_op(),id2word)
-        print("Test Perplexity: %.3f" % test_perplexity)
+        test_perplexity, test_accuracy = run_epoch(session,
+                                                   mtest,
+                                                   test_data,
+                                                   tf.no_op(),
+                                                   id2word)
+        print("Test Perplexity: %.3f Test Accuracy" % (test_perplexity,test_accuracy))
 
 
 if __name__ == "__main__":
