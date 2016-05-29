@@ -122,7 +122,7 @@ def run_epoch(session, m, data, eval_op, id2word, verbose=False):
         cost, prediction, _ = session.run([m.cost, m.prediction, eval_op],
                                      {m.input_data: x,
                                       m.targets: y})
-        correct_answers += (np.argmax(prediction) == np.array(y)).sum()
+        correct_answers += (np.argmax(prediction, 1) == np.array(y)).sum()
         costs += cost
 
         if verbose and step % (epoch_size // 10) == 10:
@@ -185,7 +185,7 @@ def main(_):
                                                    test_data,
                                                    tf.no_op(),
                                                    id2word)
-        print("Test Perplexity: %.3f Test Accuracy" % (test_perplexity,test_accuracy))
+        print("Test Perplexity: %.3f Test Accuracy: %.3f" % (test_perplexity,test_accuracy))
 
 
 if __name__ == "__main__":
